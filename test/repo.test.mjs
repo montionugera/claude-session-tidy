@@ -44,7 +44,7 @@ function headerImports(code) {
 
 test("package.json: name, version, module type, bin, engines, scripts, links, license", () => {
   assert.equal(pkg.name, "claude-session-tidy");
-  assert.equal(pkg.version, "1.1.0");
+  assert.equal(pkg.version, "1.2.0");
   assert.equal(pkg.type, "module");
   assert.deepEqual(pkg.bin, { "claude-session-tidy": "bin/claude-session-tidy.mjs" });
   assert.equal(pkg.engines.node, ">=18");
@@ -62,7 +62,7 @@ test("package.json: name, version, module type, bin, engines, scripts, links, li
 test("the version is the same in the package, the code and the plugin", () => {
   assert.equal(VERSION, pkg.version);
   assert.equal(json(".claude-plugin", "plugin.json").version, pkg.version);
-  assert.match(read("CHANGELOG.md"), new RegExp(`^## \\[${pkg.version.replace(/\./g, "\\.")}\\] - 2026-10-15$`, "m"));
+  assert.match(read("CHANGELOG.md"), new RegExp(`^## \\[${pkg.version.replace(/\./g, "\\.")}\\] - 2026-10-18$`, "m"));
 });
 
 test("the published files exist, and nothing outside the package is listed", () => {

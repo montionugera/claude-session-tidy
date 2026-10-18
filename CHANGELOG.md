@@ -2,11 +2,12 @@
 
 All notable changes to claude-session-tidy are written here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.2.0] - 2026-10-18
 
 - Add `list --title <text>` for literal, case-insensitive title searches before limits, combined with project, sort and due filters. Text and markdown headers show the filter and counts; filtered JSON includes `title` and `matched`. Empty search text is rejected without reading sessions.
 - Update repository checks for the intentionally absent `.gitattributes` and the plugin's PNG icon, and compare repository text independently of Windows checkout line endings.
 - Allow manually running the test matrix, including validation in forks.
+- Contributed by [@Dcastroro](https://github.com/Dcastroro) in [#5](https://github.com/nrzz/claude-session-tidy/pull/5), for the good first issue [#3](https://github.com/nrzz/claude-session-tidy/issues/3). The repository checks it repaired had been red on main since the 16 October commit that dropped `.gitattributes` for the plugin directory.
 
 ## [1.1.0] - 2026-10-15
 
@@ -22,5 +23,7 @@ All notable changes to claude-session-tidy are written here. The format follows 
 - A plugin `session-tidy` with one user-only skill, `/session-tidy:list`, and the same hook.
 - Checked against Claude Code 2.1.295: the cleanup goes by a file's modification time and not the timestamps inside it; it skips sessions started by Claude Desktop; it takes a session's folder along but leaves `file-history/`, `session-env/`, `uploads/` and `tasks/` behind; a touched session survives it; a deleted session cannot be resumed and a restored one resumes with its whole history. The checks run against the real binary in CI (`E2E_CLAUDE`), weekly.
 
+[1.2.0]: https://github.com/nrzz/claude-session-tidy/compare/v1.1.0...v1.2.0
+[1.1.0]: https://github.com/nrzz/claude-session-tidy/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/nrzz/claude-session-tidy/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/nrzz/claude-session-tidy/releases/tag/v1.0.0
