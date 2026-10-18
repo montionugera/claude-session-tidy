@@ -36,14 +36,17 @@ function notes(m) {
 }
 
 function header(m, markdown = false) {
-  let count = m.due === undefined
-    ? (m.shown < m.total ? `${m.shown} of ${m.total}` : `${m.total}`)
-    : `${m.shown < m.matched ? `${m.shown} of ${m.matched}` : m.shown} due within ${plural(m.due, "day")}, of ${m.total}`;
+  const filters = [];
   if (m.title !== undefined) {
     let query = JSON.stringify(oneLine(m.title, 70));
     if (markdown) query = query.replace(/[\\`*_[\]<>|]/g, "\\$&");
-    count = `${m.shown < m.matched ? `${m.shown} of ${m.matched}` : m.shown} matching ${query}${m.due === undefined ? "" : `, due within ${plural(m.due, "day")}`}, of ${m.total}`;
+    filters.push(`matching ${query}`);
   }
+  if (m.since !== undefined) filters.push(`active in the last ${plural(m.since, "day")}`);
+  if (m.due !== undefined) filters.push(`due within ${plural(m.due, "day")}`);
+  const count = filters.length
+    ? `${m.shown < m.matched ? `${m.shown} of ${m.matched}` : m.shown} ${filters.join(", ")}, of ${m.total}`
+    : (m.shown < m.total ? `${m.shown} of ${m.total}` : `${m.total}`);
   const where = m.scope.all ? "all projects" : m.scope.label;
   return { title: `Sessions in ${where} (${count}, ${SORT_LABEL[m.sort]})`, cleanup: `Cleanup: ${describeRetention(m.retention)}.` };
 }

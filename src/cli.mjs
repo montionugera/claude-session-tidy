@@ -14,7 +14,7 @@ import {
 import { findSessions, makeStore, projectName, resolveIds, shortIds } from "./sessions.mjs";
 import { ACTIVE_MS, findCandidates } from "./tidy.mjs";
 import { deleteSessions, emptyTrash, listTrash, restoreSession } from "./trash.mjs";
-import { UserError, cmp, fail, isoOf, makeColors, plural } from "./util.mjs";
+import { DAY, UserError, cmp, fail, isoOf, makeColors, plural } from "./util.mjs";
 import { REPO_URL, VERSION } from "./version.mjs";
 
 // ---------------------------------------------------------------------------------------------
@@ -22,7 +22,7 @@ import { REPO_URL, VERSION } from "./version.mjs";
 // ---------------------------------------------------------------------------------------------
 
 export const COMMANDS = {
-  list: { run: cmdList, bool: ["all", "json", "markdown"], value: ["project", "sort", "limit", "due", "title"] },
+  list: { run: cmdList, bool: ["all", "json", "markdown"], value: ["project", "sort", "limit", "due", "since", "title"] },
   delete: { run: cmdDelete, bool: ["dry-run", "json"], value: [] },
   restore: { run: cmdRestore, bool: ["dry-run", "json"], value: [] },
   keep: { run: cmdKeep, bool: ["dry-run", "json"], value: [] },
@@ -100,6 +100,7 @@ async function cmdList(args, ctx) {
   if (!["age", "size", "prompts"].includes(sort)) fail("--sort must be age, size or prompts.");
   const limit = args.limit === undefined ? Infinity : wholeNumber(args.limit, "--limit");
   const due = args.due === undefined ? undefined : wholeNumber(args.due, "--due");
+  const since = args.since === undefined ? undefined : wholeNumber(args.since, "--since");
   const title = args.title === undefined ? undefined : String(args.title);
   if (title !== undefined && !title.trim()) fail("--title needs non-empty text.");
   const scope = scopeOf(args, ctx);
@@ -116,6 +117,7 @@ async function cmdList(args, ctx) {
   else { sessions.forEach((s) => { withScan(s); withActivity(s); }); sessions.sort((a, b) => b.prompts - a.prompts || byTime(a, b)); }
   if (due !== undefined) sessions.forEach((s) => withSweep(s, retention, now));
   let matching = due === undefined ? sessions : sessions.filter((s) => s.sweep.daysLeft !== null && s.sweep.daysLeft <= due);
+  if (since !== undefined) matching = matching.filter((s) => s.lastActiveMs >= now - since * DAY);
   if (title !== undefined) {
     const needle = title.toLowerCase();
     matching = matching.filter((s) => withScan(s).title.toLowerCase().includes(needle));
@@ -136,7 +138,7 @@ async function cmdList(args, ctx) {
   // Kept sessions that are not in this table may sit in another project; only those missing everywhere are reported.
   const keptMissing = scope.all ? everKept.filter((id) => !present.has(id)) : [];
   const model = {
-    scope, sort, retention, rows, due, title, matched: matching.length, shown: rows.length, total: sessions.length,
+    scope, sort, retention, rows, due, since, title, matched: matching.length, shown: rows.length, total: sessions.length,
     totalBytes: measured ? sessions.reduce((n, s) => n + (s.totalBytes ?? 0), 0) : null,
     keptCount: scope.all ? everKept.length : keptHere, keptMissing, hook, trash: trashSummary(env),
   };
@@ -147,13 +149,15 @@ async function cmdList(args, ctx) {
       retention: { days: retention.days, source: retention.source, file: retention.file, paused: retention.paused, desktopDays: retention.desktopDays },
       hook: { installed: hook.installed, plugin: hook.plugin },
       total: model.total, shown: model.shown, bytes: model.totalBytes, keptMissing,
-      ...(title === undefined ? {} : { title, matched: model.matched }),
+      ...(title === undefined ? {} : { title }),
+      ...(since === undefined ? {} : { since }),
+      ...(title === undefined && since === undefined ? {} : { matched: model.matched }),
       sessions: rows.map(jsonRow),
     }, null, 2)}\n`);
     return 0;
   }
   if (args.markdown) { ctx.say(renderListMarkdown(model)); return 0; }
-  if (!rows.length && due === undefined && title === undefined) {
+  if (!rows.length && due === undefined && since === undefined && title === undefined) {
     ctx.say(`No Claude Code sessions found for ${scope.label} (looked in ${projectsDir(env)}).`);
     if (!scope.all) ctx.say(ctx.c.dim("Use --all to list every project's sessions."));
     return 0;
@@ -317,7 +321,7 @@ async function cmdUninstall(args, ctx) {
 const helpText = (c) => `${c.bold("claude-session-tidy")} ${VERSION}: list, delete, keep and restore your Claude Code sessions.
 
 ${c.bold("Look")}
-  claude-session-tidy list [--all | --project <dir>] [--sort age|size|prompts] [--due <days>] [--title <text>] [--limit <n>] [--json | --markdown]
+  claude-session-tidy list [--all | --project <dir>] [--sort age|size|prompts] [--due <days>] [--since <days>] [--title <text>] [--limit <n>] [--json | --markdown]
 
 ${c.bold("Delete, with a way back")}
   claude-session-tidy delete <id...> [--dry-run] [--json]      move sessions to the trash
