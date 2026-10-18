@@ -2,6 +2,12 @@
 
 All notable changes to claude-session-tidy are written here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+- Add `list --title <text>` for literal, case-insensitive title searches before limits, combined with project, sort and due filters. Text and markdown headers show the filter and counts; filtered JSON includes `title` and `matched`. Empty search text is rejected without reading sessions.
+- Update repository checks for the intentionally absent `.gitattributes` and the plugin's PNG icon, and compare repository text independently of Windows checkout line endings.
+- Allow manually running the test matrix, including validation in forks.
+
 ## [1.1.0] - 2026-10-15
 
 - Add `list --due <days>` to show sessions due for cleanup within a chosen number of days, including overdue and kept sessions, before applying `--limit`. Contributed by @facelessdevhack in #2, the first outside pull request.
